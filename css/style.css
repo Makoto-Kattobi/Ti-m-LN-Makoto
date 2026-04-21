@@ -63,7 +63,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, 'Segoe UI', sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1.65;
   transition: background .25s, color .25s;
 }
@@ -91,6 +91,34 @@ button { font-family: inherit; cursor: pointer; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #c1c7ce; border-radius: 4px; }
 body.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+/* ── GLOBAL FONT SIZE OVERRIDE ── */
+html { font-size: 20px !important; }
+body { font-size: 20px !important; }
+.site-nav .nav-inner a { font-size: 1rem !important; }
+.box-head { font-size: 1rem !important; }
+.section-title { font-size: 1.1rem !important; }
+.story-name { font-size: 1.3rem !important; }
+.story-desc { font-size: 1rem !important; }
+.story-status { font-size: .9rem !important; }
+.chap-row { font-size: 1rem !important; }
+.chap-time { font-size: .85rem !important; }
+.tag { font-size: .8rem !important; padding: 3px 10px !important; }
+.feat-name { font-size: 1rem !important; }
+.feat-sub { font-size: .85rem !important; }
+.cp-title { font-size: .95rem !important; }
+.cp-text { font-size: .92rem !important; }
+.cp-meta { font-size: .82rem !important; }
+.tab-bar button { font-size: .88rem !important; }
+.discord-bar-title { font-size: 1.05rem !important; }
+.discord-bar-sub { font-size: .9rem !important; }
+.pager a, .pager span { font-size: .95rem !important; }
+.footer-col ul a { font-size: .92rem !important; }
+.footer-desc { font-size: .92rem !important; }
+.footer-bottom { font-size: .8rem !important; }
+.logo-text { font-size: 1.2rem !important; }
+.nav-badge { font-size: .72rem !important; }
+
+
 
 /* ── HEADER ── */
 .site-header {
