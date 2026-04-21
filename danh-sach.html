@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Danh Sách Truyện — LN Kattobi</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+.genre-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.gp { padding:5px 14px; border-radius:20px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:.76rem; font-weight:700; cursor:pointer; transition:all .15s; }
+.gp:hover, .gp.on { background:var(--orange); color:#fff; border-color:var(--orange); }
+
+.filter-bar { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:12px 16px; margin-bottom:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.fi-wrap { position:relative; flex:1; min-width:200px; }
+.fi-wrap i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:.82rem; }
+.fi { border:1px solid var(--border); background:var(--bg); color:var(--text); padding:9px 14px 9px 36px; border-radius:5px; font-size:.9rem; outline:none; width:100%; transition:border-color .15s; }
+.fi:focus { border-color:var(--orange); }
+.fsel { border:1px solid var(--border); background:var(--bg); color:var(--text); padding:9px 12px; border-radius:5px; font-size:.86rem; outline:none; cursor:pointer; }
+.fbtn { background:var(--orange); color:#fff; border:none; padding:9px 18px; border-radius:5px; font-size:.86rem; font-weight:700; display:flex; align-items:center; gap:6px; }
+.fbtn:hover { background:var(--orange-d); }
+.fclr { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:9px 14px; border-radius:5px; font-size:.86rem; font-weight:600; }
+.fclr:hover { border-color:var(--orange); color:var(--orange); }
+
+.empty { padding:60px; text-align:center; color:var(--muted); }
+.empty i { font-size:2rem; display:block; margin-bottom:12px; color:var(--muted2); }
+.empty h3 { font-size:1rem; color:var(--text); margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div id="hdr"></div>
+<div class="page-wrap">
+  <div class="two-col">
+    <main>
+      <div class="genre-bar" id="gb"></div>
+      <div class="filter-bar">
+        <div class="fi-wrap">
+          <i class="fas fa-search"></i>
+          <input class="fi" id="qi" placeholder="Tên truyện, tác giả...">
+        </div>
+        <select class="fsel" id="si" onchange="run()">
+          <option value="">Sắp xếp: Mặc định</option>
+          <option value="ch">Nhiều chương nhất</option>
+          <option value="rt">Đánh giá cao nhất</option>
+          <option value="az">Tên A → Z</option>
+        </select>
+        <select class="fsel" id="sti" onchange="run()">
+          <option value="">Trạng thái: Tất cả</option>
+          <option value="done">Hoàn thành</option>
+          <option value="ongoing">Đang tiến hành</option>
+        </select>
+        <button class="fbtn" onclick="run()"><i class="fas fa-filter"></i> Lọc</button>
+        <button class="fclr" onclick="clr()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="section-title" style="border-radius:6px 6px 0 0">
+        <i class="fas fa-book"></i> Danh Sách Truyện
+        <span class="st-space"></span>
+        <span id="cnt" style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">0 bộ</span>
+      </div>
+      <div class="story-list-wrap" id="sl">
+        <div class="loading"><div class="spinner"></div>Đang tải...</div>
+      </div>
+      <div class="pager" id="pg"></div>
+    </main>
+    <div id="rsb"></div>
+  </div>
+</div>
+<div id="ftr"></div>
+
+<script src="js/app.js"></script>
+<script>
+const B = '';
+const PER = 8;
+let all = [], filtered = [], pg = 1, ag = '';
+
+async function boot() {
+  document.getElementById('hdr').innerHTML = renderHeader('list', B);
+  document.getElementById('ftr').innerHTML = renderFooter(B);
+  initDark();
+  // Build genre bar
+  const gb = document.getElementById('gb');
+  ['Tất cả', ...GENRES].forEach((g, i) => {
+    const el = document.createElement('button');
+    el.className = 'gp' + (i===0?' on':'');
+    el.textContent = g;
+    el.dataset.g = i===0 ? '' : g;
+    el.onclick = function() {
+      document.querySelectorAll('.gp').forEach(b=>b.classList.remove('on'));
+      this.classList.add('on');
+      ag = this.dataset.g;
+      document.getElementById('qi').value = ag;
+      run();
+    };
+    gb.appendChild(el);
+  });
+  try {
+    all = await loadJSON('data/truyen.json');
+    document.getElementById('rsb').innerHTML = renderSidebar(all, B);
+    initTabs('#feat-box','[data-tab]','[data-pane]');
+    const q = getParam('q') || '';
+    if (q) { document.getElementById('qi').value = q; }
+    if (getParam('loai')==='hoanhthanh') document.getElementById('sti').value = 'done';
+    run();
+  } catch(e) {
+    document.getElementById('sl').innerHTML =
+      `<div class="empty"><i class="fas fa-exclamation-circle"></i><h3>Không tải được dữ liệu</h3><p>${e.message}</p></div>`;
+  }
+}
+
+function run() {
+  const q = document.getElementById('qi').value.toLowerCase().trim();
+  const sort = document.getElementById('si').value;
+  const status = document.getElementById('sti').value;
+  filtered = all.filter(t => {
+    const mq = !q || t.ten.toLowerCase().includes(q) || (t.tac_gia||'').toLowerCase().includes(q) || (t.the_loai||[]).some(g=>g.toLowerCase().includes(q)) || (t.mo_ta||'').toLowerCase().includes(q);
+    const ms = !status || (status==='done'&&t.trang_thai==='done') || (status==='ongoing'&&t.trang_thai!=='done');
+    return mq && ms;
+  });
+  if (sort==='ch') filtered.sort((a,b)=>(b.so_chuong||0)-(a.so_chuong||0));
+  else if (sort==='rt') filtered.sort((a,b)=>parseFloat(b.danh_gia||0)-parseFloat(a.danh_gia||0));
+  else if (sort==='az') filtered.sort((a,b)=>a.ten.localeCompare(b.ten,'vi'));
+  document.getElementById('cnt').textContent = filtered.length + ' bộ';
+  showPage(1);
+}
+
+function clr() {
+  document.getElementById('qi').value = '';
+  document.getElementById('si').value = '';
+  document.getElementById('sti').value = '';
+  ag = '';
+  document.querySelectorAll('.gp').forEach((b,i)=>b.classList.toggle('on',i===0));
+  run();
+}
+
+function showPage(p) {
+  pg = p;
+  const slice = filtered.slice((p-1)*PER, p*PER);
+  if (!slice.length) {
+    document.getElementById('sl').innerHTML =
+      `<div class="empty"><i class="fas fa-book-open"></i><h3>Không tìm thấy truyện</h3><p>Thử từ khóa khác hoặc xóa bộ lọc.</p></div>`;
+    document.getElementById('pg').innerHTML = '';
+    return;
+  }
+  document.getElementById('sl').innerHTML = slice.map(t => storyCard(t, B)).join('');
+  buildPager();
+  scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildPager() {
+  const total = Math.ceil(filtered.length / PER);
+  if (total <= 1) { document.getElementById('pg').innerHTML = ''; return; }
+  let h = '';
+  if (pg>1) h += `<a onclick="showPage(${pg-1})">‹</a>`;
+  for (let i=1;i<=total;i++) {
+    if (i===pg) h += `<span class="cur">${i}</span>`;
+    else if (i<=2||i>total-2||Math.abs(i-pg)<=1) h += `<a onclick="showPage(${i})">${i}</a>`;
+    else if (i===3||i===total-2) h += `<span class="dots">…</span>`;
+  }
+  if (pg<total) h += `<a onclick="showPage(${pg+1})">›</a>`;
+  document.getElementById('pg').innerHTML = h;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const qi = document.getElementById('qi');
+  if (qi) {
+    qi.addEventListener('input', () => { clearTimeout(qi._t); qi._t = setTimeout(run, 300); });
+    qi.addEventListener('keydown', e => { if (e.key==='Enter') run(); });
+  }
+});
+
+boot();
+</script>
+</body>
+</html>

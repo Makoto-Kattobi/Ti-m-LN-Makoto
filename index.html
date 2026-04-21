@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LN Kattobi — Đọc Light Novel Miễn Phí</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div id="hdr"></div>
+
+<div class="page-wrap">
+  <div class="three-col">
+    <div id="lsb"></div>
+
+    <main>
+      <div class="discord-bar" onclick="window.open('#','_blank')">
+        <i class="fab fa-discord"></i>
+        <div class="discord-bar-text">
+          <div class="discord-bar-title">Tham gia Discord!</div>
+          <div class="discord-bar-sub">Thảo luận, yêu cầu truyện và tương tác cùng cộng đồng</div>
+        </div>
+        <span class="discord-join">Tham gia</span>
+      </div>
+
+      <div class="section-title">
+        <i class="fas fa-bolt"></i> Mới Cập Nhật
+        <span class="st-space"></span>
+        <a href="danh-sach.html">Xem tất cả →</a>
+      </div>
+
+      <div class="story-list-wrap" id="story-list">
+        <div class="loading"><div class="spinner"></div>Đang tải...</div>
+      </div>
+      <div class="pager" id="pager"></div>
+    </main>
+
+    <div id="rsb"></div>
+  </div>
+</div>
+
+<div id="ftr"></div>
+
+<script src="js/app.js"></script>
+<script>
+const B = '';
+const PER = 6;
+let all = [], pg = 1;
+
+async function boot() {
+  document.getElementById('hdr').innerHTML = renderHeader('home', B);
+  document.getElementById('ftr').innerHTML = renderFooter(B);
+  initDark();
+  try {
+    all = await loadJSON('data/truyen.json');
+    document.getElementById('lsb').innerHTML = renderLeftSidebar(B);
+    document.getElementById('rsb').innerHTML = renderSidebar(all, B);
+    initTabs('#feat-box', '[data-tab]', '[data-pane]');
+    showPage(1);
+  } catch(e) {
+    document.getElementById('story-list').innerHTML =
+      `<div class="loading" style="color:var(--orange)">
+        <i class="fas fa-exclamation-circle" style="font-size:1.5rem;display:block;margin-bottom:8px"></i>
+        Không tải được dữ liệu.<br>
+        <small style="color:var(--muted)">Kiểm tra file data/truyen.json</small>
+      </div>`;
+  }
+}
+
+function showPage(p) {
+  pg = p;
+  const slice = all.slice((p-1)*PER, p*PER);
+  if (!slice.length) {
+    document.getElementById('story-list').innerHTML =
+      `<div class="loading">
+        <i class="fas fa-book-open" style="font-size:1.5rem;display:block;margin-bottom:10px;color:var(--muted2)"></i>
+        Chưa có truyện nào.<br>
+        <small style="color:var(--muted)">Thêm truyện vào file <code>data/truyen.json</code></small>
+      </div>`;
+    document.getElementById('pager').innerHTML = '';
+    return;
+  }
+  document.getElementById('story-list').innerHTML = slice.map(t => storyCard(t, B)).join('');
+  buildPager();
+  scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildPager() {
+  const total = Math.ceil(all.length / PER);
+  if (total <= 1) { document.getElementById('pager').innerHTML = ''; return; }
+  let h = '';
+  if (pg > 1) h += `<a onclick="showPage(${pg-1})">‹</a>`;
+  for (let i = 1; i <= total; i++) {
+    if (i === pg) h += `<span class="cur">${i}</span>`;
+    else if (i<=2||i>total-2||Math.abs(i-pg)<=1) h += `<a onclick="showPage(${i})">${i}</a>`;
+    else if (i===3||i===total-2) h += `<span class="dots">…</span>`;
+  }
+  if (pg < total) h += `<a onclick="showPage(${pg+1})">›</a>`;
+  document.getElementById('pager').innerHTML = h;
+}
+
+boot();
+</script>
+</body>
+</html>

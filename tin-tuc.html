@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tin Tức — LN Kattobi</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+.cat-bar { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; }
+.cat-btn { padding:5px 14px; border-radius:20px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:.76rem; font-weight:700; cursor:pointer; transition:all .15s; }
+.cat-btn:hover, .cat-btn.on { background:var(--orange); color:#fff; border-color:var(--orange); }
+
+.news-grid { background:var(--card); border:1px solid var(--border); border-top:none; border-radius:0 0 6px 6px; }
+.news-feat { display:grid; grid-template-columns:280px 1fr; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
+.news-feat:hover { background:rgba(255,122,46,.04); }
+.nthumb { background:linear-gradient(135deg,#374151,#1e2d3d); display:flex; align-items:center; justify-content:center; aspect-ratio:16/9; }
+.nthumb img { width:100%; height:100%; object-fit:cover; }
+.nthumb-ph { font-size:4rem; color:rgba(255,255,255,.15); font-weight:900; }
+.nbody { padding:20px 24px; display:flex; flex-direction:column; gap:8px; }
+.nlabel { font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; display:flex; align-items:center; gap:6px; }
+.nhot { background:#ef4444; color:#fff; font-size:.62rem; font-weight:800; padding:1px 7px; border-radius:3px; }
+.ntitle { font-size:1.05rem; font-weight:800; color:var(--text); line-height:1.4; }
+.news-feat:hover .ntitle { color:var(--orange); }
+.nexcerpt { font-size:.88rem; color:var(--muted); line-height:1.65; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; flex:1; }
+.nmeta { font-size:.76rem; color:var(--muted); display:flex; gap:14px; flex-wrap:wrap; }
+.nmeta i { margin-right:3px; color:var(--muted2); }
+
+.news-item { display:flex; gap:14px; padding:14px 18px; border-bottom:1px solid var(--border2); cursor:pointer; transition:background .15s; }
+.news-item:last-child { border-bottom:none; }
+.news-item:hover { background:rgba(255,122,46,.04); }
+.nithumb { width:96px; height:72px; flex-shrink:0; border-radius:4px; overflow:hidden; background:linear-gradient(135deg,#374151,#1e2d3d); display:flex; align-items:center; justify-content:center; }
+.nithumb-ph { font-size:1.6rem; color:rgba(255,255,255,.2); font-weight:900; }
+.nibody { flex:1; min-width:0; }
+.nilabel { font-size:.67rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+.nititle { font-size:.92rem; font-weight:800; color:var(--text); line-height:1.4; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.news-item:hover .nititle { color:var(--orange); }
+.niexcerpt { font-size:.8rem; color:var(--muted); line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:4px; }
+.nimeta { font-size:.74rem; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap; }
+.nimeta i { margin-right:3px; }
+
+/* Modal */
+.modal-ov { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:999; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; }
+.modal { background:var(--card); border:1px solid var(--border); border-radius:8px; max-width:720px; width:100%; padding:32px 36px; position:relative; animation:slideUp .25s ease; }
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.modal-close { position:absolute; top:14px; right:14px; background:var(--bg); border:none; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.9rem; color:var(--text); cursor:pointer; transition:background .15s; }
+.modal-close:hover { background:#ef4444; color:#fff; }
+.modal-title { font-size:1.45rem; font-weight:900; color:var(--text); line-height:1.3; margin:10px 0 12px; }
+.modal-meta { font-size:.8rem; color:var(--muted); padding-bottom:16px; margin-bottom:20px; border-bottom:1px solid var(--border2); display:flex; gap:14px; flex-wrap:wrap; }
+.modal-meta i { margin-right:4px; color:var(--orange); }
+.modal-body { font-size:.98rem; line-height:1.85; color:var(--text2); }
+.modal-body p { margin-bottom:1em; }
+.modal-body strong { color:var(--text); }
+.modal-body blockquote { border-left:3px solid var(--orange); padding:10px 16px; margin:1em 0; background:rgba(255,122,46,.05); font-style:italic; border-radius:0 4px 4px 0; }
+.modal-body ul { padding-left:20px; margin-bottom:1em; }
+.modal-body ul li { margin-bottom:4px; }
+
+@media (max-width:600px) {
+  .news-feat { grid-template-columns:1fr; }
+  .modal { padding:20px 16px; }
+  .modal-title { font-size:1.2rem; }
+}
+</style>
+</head>
+<body>
+<div id="hdr"></div>
+<div class="page-wrap">
+  <div class="two-col">
+    <main>
+      <div class="cat-bar" id="cb">
+        <button class="cat-btn on" onclick="fcat('',this)">Tất cả</button>
+        <button class="cat-btn" onclick="fcat('Chuyển Thể',this)"><i class="fas fa-film"></i> Chuyển Thể</button>
+        <button class="cat-btn" onclick="fcat('Cuộc Thi',this)"><i class="fas fa-trophy"></i> Cuộc Thi</button>
+        <button class="cat-btn" onclick="fcat('Cập Nhật',this)"><i class="fas fa-bullhorn"></i> Cập Nhật</button>
+        <button class="cat-btn" onclick="fcat('Phỏng Vấn',this)"><i class="fas fa-microphone"></i> Phỏng Vấn</button>
+        <button class="cat-btn" onclick="fcat('Review',this)"><i class="fas fa-star"></i> Review</button>
+      </div>
+      <div class="section-title">
+        <i class="fas fa-newspaper"></i> Tin Tức
+        <span class="st-space"></span>
+        <span id="nc" style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0"></span>
+      </div>
+      <div class="news-grid" id="ng">
+        <div class="loading"><div class="spinner"></div>Đang tải...</div>
+      </div>
+    </main>
+    <div id="rsb"></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="mo" style="display:none" onclick="if(event.target===this)closeM()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeM()"><i class="fas fa-times"></i></button>
+    <div id="mb"></div>
+  </div>
+</div>
+
+<div id="ftr"></div>
+<script src="js/app.js"></script>
+<script>
+const B = '';
+let all = [], cat = '';
+
+const ICON = { 'Chuyển Thể':'fas fa-film','Cuộc Thi':'fas fa-trophy','Cập Nhật':'fas fa-bullhorn','Phỏng Vấn':'fas fa-microphone','Bảng Xếp Hạng':'fas fa-chart-bar','Review':'fas fa-star' };
+const COL  = { 'Chuyển Thể':'#ef4444','Cuộc Thi':'#f59e0b','Cập Nhật':'#3b82f6','Phỏng Vấn':'#8b5cf6','Bảng Xếp Hạng':'#ff7a2e','Review':'#10b981' };
+
+async function boot() {
+  document.getElementById('hdr').innerHTML = renderHeader('tintuc', B);
+  document.getElementById('ftr').innerHTML = renderFooter(B);
+  initDark();
+  try {
+    const [truyen, news] = await Promise.all([loadJSON('data/truyen.json'), loadJSON('data/tintuc.json')]);
+    all = news;
+    document.getElementById('rsb').innerHTML = renderSidebar(truyen, B);
+    initTabs('#feat-box','[data-tab]','[data-pane]');
+    fcat('', document.querySelector('.cat-btn.on'));
+  } catch(e) {
+    document.getElementById('ng').innerHTML =
+      `<div class="loading" style="color:var(--orange)">
+        <i class="fas fa-exclamation-circle" style="font-size:1.5rem;display:block;margin-bottom:8px"></i>
+        Không tải được tin tức.<br>
+        <small style="color:var(--muted)">Thêm tin vào file data/tintuc.json</small>
+      </div>`;
+  }
+}
+
+function fcat(c, btn) {
+  cat = c;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  const list = c ? all.filter(n=>n.the_loai===c) : all;
+  document.getElementById('nc').textContent = list.length + ' bài';
+  if (!list.length) {
+    document.getElementById('ng').innerHTML =
+      `<div style="padding:40px;text-align:center;color:var(--muted);font-size:.9rem">
+        <i class="fas fa-newspaper" style="font-size:1.4rem;display:block;margin-bottom:8px;color:var(--muted2)"></i>
+        Chưa có tin tức nào.
+      </div>`;
+    return;
+  }
+  let h = '';
+  list.forEach((n,i) => {
+    const ic = ICON[n.the_loai]||'fas fa-circle';
+    const co = COL[n.the_loai]||'var(--orange)';
+    const hot = n.hot ? '<span class="nhot">HOT</span>' : '';
+    const lbl = `<span class="nlabel" style="color:${co}"><i class="${ic}"></i> ${n.the_loai} ${hot}</span>`;
+    if (i===0) {
+      h += `<div class="news-feat" onclick="openM('${n.id}')">
+        <div class="nthumb">${n.hinh_anh?`<img src="${n.hinh_anh}" alt="">`:`<div class="nthumb-ph">${n.hinh_text||'📰'}</div>`}</div>
+        <div class="nbody">${lbl}<div class="ntitle">${n.tieu_de}</div><div class="nexcerpt">${n.tom_tat}</div>
+          <div class="nmeta"><span><i class="far fa-user"></i>${n.tac_gia||''}</span><span><i class="far fa-calendar"></i>${n.ngay_dang||''}</span><span><i class="far fa-eye"></i>${n.luot_xem||'0'}</span><span><i class="far fa-comment"></i>${n.binh_luan||0}</span></div>
+        </div></div>`;
+    } else {
+      h += `<div class="news-item" onclick="openM('${n.id}')">
+        <div class="nithumb">${n.hinh_anh?`<img src="${n.hinh_anh}" alt="">`:`<div class="nithumb-ph">${n.hinh_text||'📰'}</div>`}</div>
+        <div class="nibody"><div class="nilabel" style="color:${co}"><i class="${ic}"></i> ${n.the_loai} ${hot}</div>
+          <div class="nititle">${n.tieu_de}</div><div class="niexcerpt">${n.tom_tat}</div>
+          <div class="nimeta"><span><i class="far fa-user"></i>${n.tac_gia||''}</span><span><i class="far fa-calendar"></i>${n.ngay_dang||''}</span><span><i class="far fa-eye"></i>${n.luot_xem||'0'}</span></div>
+        </div></div>`;
+    }
+  });
+  document.getElementById('ng').innerHTML = h;
+}
+
+function openM(id) {
+  const n = all.find(x=>x.id===id); if (!n) return;
+  const ic = ICON[n.the_loai]||'fas fa-circle';
+  const co = COL[n.the_loai]||'var(--orange)';
+  document.getElementById('mb').innerHTML =
+    `<div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:${co};margin-bottom:8px"><i class="${ic}"></i> ${n.the_loai} ${n.hot?'<span class="nhot">HOT</span>':''}</div>
+     <div class="modal-title">${n.tieu_de}</div>
+     <div class="modal-meta">
+       <span><i class="fas fa-user"></i>${n.tac_gia||''}</span>
+       <span><i class="far fa-calendar"></i>${n.ngay_dang||''}</span>
+       <span><i class="far fa-eye"></i>${n.luot_xem||'0'} lượt xem</span>
+       <span><i class="far fa-comment"></i>${n.binh_luan||0} bình luận</span>
+     </div>
+     <div class="modal-body">${n.noi_dung||n.tom_tat}</div>`;
+  document.getElementById('mo').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeM() { document.getElementById('mo').style.display='none'; document.body.style.overflow=''; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeM(); });
+
+boot();
+</script>
+</body>
+</html>
