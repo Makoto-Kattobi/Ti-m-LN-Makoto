@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   MỘCTHƯ — SHARED STYLES
+   LN KATTOBI — SHARED STYLES
    Valvrareteam-inspired · Orange accent
 ═══════════════════════════════════════ */
 :root {
@@ -60,10 +60,26 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, 'Segoe UI', sans-serif;
-  font-size: 14px;
+  font-size: 21px;
   line-height: 1.6;
   transition: background .25s, color .25s;
+  position: relative;
 }
+
+/* Background image wrapper */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--bg-image, none);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: -1;
+}
+body.dark::before { opacity: 0.12; }
 a { color: var(--link); text-decoration: none; transition: color .15s; }
 a:hover { color: var(--orange); }
 img { max-width: 100%; display: block; }
