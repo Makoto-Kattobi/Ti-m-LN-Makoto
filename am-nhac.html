@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Âm Nhạc — MộcThư</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* ── Music page layout ── */
+    .music-layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* ── Player card ── */
+    .player-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      position: sticky; top: 80px;
+    }
+    .player-art {
+      width: 100%;
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #1e2d3d, #2c3e50, #1e2d3d);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .player-art::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(255,122,46,.15), transparent 70%);
+    }
+    /* Vinyl disc */
+    .vinyl {
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background:
+        repeating-radial-gradient(circle, #0e0c0a 0, #1a1614 2px, #0e0c0a 4px);
+      border: 4px solid #2a2220;
+      display: flex; align-items: center; justify-content: center;
+      animation: spin 10s linear infinite paused;
+      position: relative;
+      box-shadow: 0 0 40px rgba(0,0,0,.5);
+    }
+    .vinyl.playing { animation-play-state: running; }
+    .vinyl::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      background: repeating-radial-gradient(
+        circle, transparent 0, transparent 28px,
+        rgba(255,255,255,.015) 28px, rgba(255,255,255,.015) 29px
+      );
+    }
+    .vinyl-center {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange), #ff9f5e);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: #fff; font-weight: 900;
+      box-shadow: 0 0 0 6px rgba(255,122,46,.15);
+      z-index: 1;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Player info */
+    .player-info { padding: 20px 22px 0; text-align: center; }
+    .player-track {
+      font-size: 1.05rem; font-weight: 800; color: var(--text);
+      margin-bottom: 3px; line-height: 1.3;
+    }
+    .player-artist { font-size: .82rem; color: var(--muted); margin-bottom: 16px; }
+    .player-genre {
+      display: inline-block;
+      background: rgba(255,122,46,.12); color: var(--orange);
+      font-size: .68rem; font-weight: 700;
+      padding: 3px 12px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 18px;
+    }
+
+    /* Progress */
+    .player-progress { padding: 0 22px; margin-bottom: 14px; }
+    .progress-track {
+      width: 100%; height: 5px;
+      background: var(--border); border-radius: 3px;
+      cursor: pointer; position: relative;
+    }
+    .progress-fill {
+      height: 100%; background: var(--orange); border-radius: 3px;
+      width: 0%; transition: width .1s;
+      position: relative;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute; right: -5px; top: -3px;
+      width: 11px; height: 11px; border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 3px rgba(255,122,46,.2);
+    }
+    .progress-times {
+      display: flex; justify-content: space-between;
+      font-size: .72rem; color: var(--muted); margin-top: 6px;
+    }
+
+    /* Volume */
+    .player-volume {
+      padding: 0 22px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .vol-icon { color: var(--muted); font-size: .82rem; }
+    .vol-track {
+      flex: 1; height: 4px;
+      background: var(--border); border-radius: 2px;
+      cursor: pointer;
+    }
+    .vol-fill {
+      height: 100%; background: var(--muted); border-radius: 2px;
+      width: 75%; transition: width .1s;
+    }
+
+    /* Controls */
+    .player-controls {
+      padding: 0 22px 20px;
+      display: flex; align-items: center; justify-content: center; gap: 20px;
+    }
+    .ctrl {
+      background: none; border: none;
+      color: var(--muted); font-size: 1rem;
+      width: 38px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; transition: all .15s;
+    }
+    .ctrl:hover { color: var(--text); background: var(--bg); }
+    .ctrl.active { color: var(--orange); }
+    .ctrl-play {
+      width: 50px; height: 50px;
+      background: var(--orange); color: #fff;
+      font-size: 1.15rem;
+      box-shadow: 0 4px 14px rgba(255,122,46,.4);
+    }
+    .ctrl-play:hover { background: var(--orange-d); transform: scale(1.05); color: #fff; }
+
+    /* ── Playlist panel ── */
+    .playlist-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    /* Genre tabs */
+    .genre-tab-bar {
+      display: flex; overflow-x: auto; gap: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+    .genre-tab {
+      padding: 11px 18px;
+      border: none; background: none;
+      font-size: .78rem; font-weight: 700;
+      color: var(--muted); white-space: nowrap;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      cursor: pointer; transition: all .15s;
+    }
+    .genre-tab.active, .genre-tab:hover { color: var(--orange); border-bottom-color: var(--orange); }
+
+    .track-list { max-height: 560px; overflow-y: auto; }
+    .track-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border2);
+      cursor: pointer; transition: background .15s;
+    }
+    .track-item:last-child { border-bottom: none; }
+    .track-item:hover { background: rgba(255,122,46,.05); }
+    .track-item.active {
+      background: rgba(255,122,46,.08);
+      border-left: 3px solid var(--orange);
+    }
+
+    .track-num {
+      width: 26px; text-align: center;
+      font-size: .78rem; color: var(--muted); font-weight: 700;
+      flex-shrink: 0;
+    }
+    .track-item.active .track-num { color: var(--orange); }
+
+    .track-art {
+      width: 42px; height: 42px; border-radius: 4px;
+      background: linear-gradient(135deg, #2c3e50, #374151);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 1rem; color: rgba(255,255,255,.3);
+      font-weight: 900; overflow: hidden; position: relative;
+    }
+    .track-item.active .track-art::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(255,122,46,.4);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .track-item.active .playing-anim {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,122,46,.5);
+      z-index: 1;
+    }
+    .playing-anim { display: none; }
+
+    .track-info { flex: 1; min-width: 0; }
+    .track-name {
+      font-size: .86rem; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    .track-item.active .track-name { color: var(--orange); }
+    .track-artist { font-size: .72rem; color: var(--muted); }
+
+    .track-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .track-dur { font-size: .74rem; color: var(--muted); font-weight: 600; }
+    .track-fav {
+      background: none; border: none; color: var(--muted2);
+      font-size: .82rem; cursor: pointer; padding: 4px;
+      transition: color .15s;
+    }
+    .track-fav:hover, .track-fav.active { color: #ef4444; }
+
+    /* Genre sections */
+    .genre-section { display: none; }
+    .genre-section.active { display: block; }
+
+    /* Tips banner */
+    .music-tips {
+      background: linear-gradient(135deg, #1e2d3d, #2c3e50);
+      border-radius: 6px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 16px; color: rgba(255,255,255,.85);
+    }
+    .music-tips i { font-size: 1.4rem; color: var(--orange); flex-shrink: 0; }
+    .music-tips-text { font-size: .82rem; line-height: 1.55; }
+    .music-tips-text strong { color: #fff; }
+
+    @media (max-width: 840px) {
+      .music-layout { grid-template-columns: 1fr; }
+      .player-card { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="header-wrap"></div>
+
+<div class="page-wrap">
+  <div class="section-title" style="margin-bottom:14px">
+    <i class="fas fa-headphones"></i> Nhạc Nền Đọc Truyện
+    <span class="spacer"></span>
+    <span style="font-size:.76rem;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0" id="play-status">Chưa phát</span>
+  </div>
+
+  <div class="music-tips">
+    <i class="fas fa-lightbulb"></i>
+    <div class="music-tips-text">
+      <strong>Mẹo:</strong> Mở nhạc rồi chuyển sang trang đọc truyện — nhạc vẫn tiếp tục phát trong nền.
+      Dùng phím <strong>Space</strong> để tạm dừng / tiếp tục.
+    </div>
+  </div>
+
+  <div class="music-layout">
+    <!-- Player -->
+    <div class="player-card" id="player-card">
+      <div class="player-art">
+        <div class="vinyl" id="vinyl">
+          <div class="vinyl-center" id="vinyl-char">♪</div>
+        </div>
+      </div>
+
+      <div class="player-info">
+        <div class="player-track" id="p-track">Chọn một bài để bắt đầu</div>
+        <div class="player-artist" id="p-artist">MộcThư Music</div>
+        <div class="player-genre" id="p-genre">Cổ Phong</div>
+      </div>
+
+      <div class="player-progress">
+        <div class="progress-track" id="progress-track">
+          <div class="progress-fill" id="p-fill"></div>
+        </div>
+        <div class="progress-times">
+          <span id="p-cur">0:00</span>
+          <span id="p-tot">0:00</span>
+        </div>
+      </div>
+
+      <div class="player-volume">
+        <i class="fas fa-volume-low vol-icon" id="vol-icon"></i>
+        <div class="vol-track" id="vol-track">
+          <div class="vol-fill" id="vol-fill"></div>
+        </div>
+        <i class="fas fa-volume-high vol-icon"></i>
+      </div>
+
+      <div class="player-controls">
+        <button class="ctrl" id="btn-shuffle" onclick="toggleShuffle()" title="Trộn bài"><i class="fas fa-shuffle"></i></button>
+        <button class="ctrl" onclick="navigate(-1)" title="Bài trước"><i class="fas fa-backward-step"></i></button>
+        <button class="ctrl ctrl-play" id="btn-play" onclick="togglePlay()" title="Phát/Dừng"><i class="fas fa-play" id="play-icon"></i></button>
+        <button class="ctrl" onclick="navigate(1)" title="Bài tiếp"><i class="fas fa-forward-step"></i></button>
+        <button class="ctrl" id="btn-repeat" onclick="toggleRepeat()" title="Lặp lại"><i class="fas fa-repeat"></i></button>
+      </div>
+    </div>
+
+    <!-- Playlist -->
+    <div class="playlist-panel">
+      <div class="genre-tab-bar" id="genre-tabs">
+        <button class="genre-tab active" data-genre="co-phong" onclick="switchGenre('co-phong',this)">🎵 Cổ Phong</button>
+        <button class="genre-tab" data-genre="ost" onclick="switchGenre('ost',this)">🎬 OST Phim</button>
+        <button class="genre-tab" data-genre="lo-fi" onclick="switchGenre('lo-fi',this)">☕ Lo-fi</button>
+        <button class="genre-tab" data-genre="epic" onclick="switchGenre('epic',this)">⚔️ Epic</button>
+        <button class="genre-tab" data-genre="nhac-nuoc" onclick="switchGenre('nhac-nuoc',this)">🌊 Thiên Nhiên</button>
+      </div>
+
+      <div class="track-list" id="track-list"></div>
+    </div>
+  </div>
+</div>
+
+<div id="footer-wrap"></div>
+
+<script src="js/app.js"></script>
+<script>
+const DATA_DIR = '';
+
+const PLAYLISTS = {
+  'co-phong': [
+    { id:1,  name:'Thiên Ngoại Phi Tiên',      artist:'Guqin & Erhu · Cổ Phong',     dur:'3:58', char:'古', fav:false },
+    { id:2,  name:'Kiếm Lâm Phong Vân',        artist:'Nhạc Phim · Cổ Trang',        dur:'4:22', char:'劍', fav:false },
+    { id:3,  name:'Vạn Lý Giang Hồ',           artist:'Pipa Solo · Lan Nhã',          dur:'5:10', char:'江', fav:false },
+    { id:4,  name:'Tương Tư Phú',              artist:'Nguyệt Cầm Ensemble',          dur:'3:44', char:'月', fav:false },
+    { id:5,  name:'Tiêu Tương Dạ Vũ',          artist:'Cổ Cầm · Meditation',         dur:'6:22', char:'雨', fav:false },
+    { id:6,  name:'Bách Niên Cô Độc',          artist:'Nhạc Khí Cổ · Trần Kỳ',      dur:'4:55', char:'孤', fav:false },
+    { id:7,  name:'Phượng Cầu Kỳ Hoàng',       artist:'Guqin Duo',                    dur:'3:59', char:'鳳', fav:false },
+    { id:8,  name:'Nguyệt Hạ Tương Phùng',     artist:'Mộc Lan · Romantic',          dur:'4:17', char:'緣', fav:false },
+    { id:9,  name:'Hồng Trần',                 artist:'OST Drama · Bạch Lộc',        dur:'3:30', char:'紅', fav:false },
+    { id:10, name:'Kiếm Khí Lăng Vân',         artist:'Thần Thoại Ensemble',         dur:'5:02', char:'仙', fav:false },
+  ],
+  'ost': [
+    { id:11, name:'Thiên Thư Kỳ Duyên (Main Theme)', artist:'OST · Thiên Vũ Tôn',     dur:'4:12', char:'天', fav:false },
+    { id:12, name:'Phượng Hoàng Truyền Kỳ',    artist:'OST · Phượng Hoàng Niết Bàn', dur:'3:55', char:'鳳', fav:false },
+    { id:13, name:'Giang Hồ Tình Hận',         artist:'OST · Giang Hồ Mộng',         dur:'4:38', char:'情', fav:false },
+    { id:14, name:'Kiếm Tâm Bất Diệt',         artist:'OST · Lăng Tiêu Kiếm Tiên',   dur:'5:20', char:'劍', fav:false },
+    { id:15, name:'Ma Đạo Thánh Ca',            artist:'OST · Ma Đạo Vấn Thiên',      dur:'3:47', char:'魔', fav:false },
+    { id:16, name:'Hệ Thống Thức Tỉnh',         artist:'OST · Thiên Vũ Tôn',          dur:'2:58', char:'系', fav:false },
+    { id:17, name:'Tình Như Bích Lạc',          artist:'OST · Bích Lạc Tình Duyên',   dur:'4:05', char:'情', fav:false },
+    { id:18, name:'Long Hồn Trỗi Dậy',         artist:'OST · Long Vương Truyền Thuyết',dur:'4:44',char:'龍', fav:false },
+  ],
+  'lo-fi': [
+    { id:19, name:'Rainy Night Reading',        artist:'Lo-fi Chill · Bedroom',        dur:'3:20', char:'☕', fav:false },
+    { id:20, name:'Late Night Chapter',         artist:'Study Lo-fi · Nostalgic',      dur:'4:01', char:'📖', fav:false },
+    { id:21, name:'Cozy Library Vibes',         artist:'Ambient · Lo-fi',              dur:'3:45', char:'🌙', fav:false },
+    { id:22, name:'Page Turner',                artist:'Chill Hop · Reading',          dur:'3:33', char:'✨', fav:false },
+    { id:23, name:'Midnight Tea',               artist:'Lo-fi Jazz · Calm',            dur:'4:18', char:'🍵', fav:false },
+    { id:24, name:'Book Lover\'s Paradise',     artist:'Soft Lo-fi · Focus',           dur:'3:55', char:'📚', fav:false },
+  ],
+  'epic': [
+    { id:25, name:'Battle of the Heavens',      artist:'Epic Orchestra · Fantasy',     dur:'4:55', char:'⚔️', fav:false },
+    { id:26, name:'Rise of the Sword Saint',    artist:'Epic Hybrid · Cinematic',      dur:'5:30', char:'劍', fav:false },
+    { id:27, name:'Dragon\'s Fury',             artist:'Epic Trailer · Power',         dur:'3:58', char:'龍', fav:false },
+    { id:28, name:'Immortal\'s Path',           artist:'Orchestral Epic · Ascension',  dur:'6:10', char:'仙', fav:false },
+    { id:29, name:'Final Stand',                artist:'Cinematic Epic · Battle',      dur:'4:42', char:'戰', fav:false },
+    { id:30, name:'Celestial Peak',             artist:'Epic Fantasy · Triumphant',    dur:'5:15', char:'天', fav:false },
+  ],
+  'nhac-nuoc': [
+    { id:31, name:'Tiếng Suối Rừng Già',       artist:'Nature Sounds · Bamboo Forest',dur:'10:00',char:'🌿', fav:false },
+    { id:32, name:'Mưa Đêm Nhẹ Nhàng',        artist:'Rain Sounds · Sleep',          dur:'8:00', char:'🌧️', fav:false },
+    { id:33, name:'Gió Thổi Qua Đồng Lúa',    artist:'Wind & Nature · Relax',        dur:'12:00',char:'🌾', fav:false },
+    { id:34, name:'Tiếng Chim Buổi Sáng',      artist:'Bird Songs · Morning',         dur:'9:00', char:'🐦', fav:false },
+    { id:35, name:'Sóng Biển Nhẹ Nhàng',       artist:'Ocean Waves · Meditate',       dur:'15:00',char:'🌊', fav:false },
+  ]
+};
+
+let curGenre = 'co-phong';
+let curIdx = 0;
+let isPlaying = false;
+let isShuffle = false;
+let isRepeat = false;
+let progress = 0;
+let volume = 75;
+let timer = null;
+let favorites = new Set();
+
+function getList() { return PLAYLISTS[curGenre]; }
+function getTrack() { return getList()[curIdx]; }
+
+function switchGenre(genre, btn) {
+  curGenre = genre;
+  curIdx = 0;
+  document.querySelectorAll('.genre-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTrackList();
+  // Don't auto-play on genre switch
+}
+
+function renderTrackList() {
+  const list = getList();
+  document.getElementById('track-list').innerHTML = list.map((t, i) => `
+    <div class="track-item ${i === curIdx ? 'active' : ''}" id="track-${i}" onclick="selectTrack(${i})">
+      <div class="track-num">${i === curIdx && isPlaying ? '<i class="fas fa-volume-high" style="color:var(--orange);font-size:.75rem"></i>' : i+1}</div>
+      <div class="track-art">
+        ${t.char}
+        ${i === curIdx ? '<div class="playing-anim"><i class="fas fa-music" style="color:#fff;font-size:.9rem"></i></div>' : ''}
+      </div>
+      <div class="track-info">
+        <div class="track-name">${t.name}</div>
+        <div class="track-artist">${t.artist}</div>
+      </div>
+      <div class="track-right">
+        <span class="track-dur">${t.dur}</span>
+        <button class="track-fav ${favorites.has(t.id) ? 'active' : ''}" onclick="event.stopPropagation();toggleFav(${i})" title="Yêu thích">
+          <i class="${favorites.has(t.id) ? 'fas' : 'far'} fa-heart"></i>
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function updatePlayerUI() {
+  const t = getTrack();
+  if (!t) return;
+  document.getElementById('p-track').textContent   = t.name;
+  document.getElementById('p-artist').textContent  = t.artist;
+  document.getElementById('vinyl-char').textContent = t.char;
+  document.getElementById('p-tot').textContent      = t.dur;
+  const genreNames = { 'co-phong':'Cổ Phong','ost':'OST Phim','lo-fi':'Lo-fi','epic':'Epic','nhac-nuoc':'Thiên Nhiên' };
+  document.getElementById('p-genre').textContent    = genreNames[curGenre] || '';
+  document.getElementById('play-icon').className    = 'fas ' + (isPlaying ? 'fa-pause' : 'fa-play');
+  document.getElementById('vinyl').className        = 'vinyl' + (isPlaying ? ' playing' : '');
+  document.getElementById('play-status').textContent = isPlaying ? `♪ ${t.name}` : 'Đã dừng';
+  updateProgress();
+  renderTrackList();
+
+  // Scroll active track into view
+  const el = document.getElementById(`track-${curIdx}`);
+  if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function updateProgress() {
+  document.getElementById('p-fill').style.width = progress + '%';
+  const [m, s] = getTrack().dur.split(':').map(Number);
+  const total = m * 60 + s;
+  const elapsed = Math.round(total * progress / 100);
+  const em = Math.floor(elapsed / 60), es = elapsed % 60;
+  document.getElementById('p-cur').textContent = `${em}:${es < 10 ? '0'+es : es}`;
+}
+
+function selectTrack(idx) {
+  curIdx = idx; progress = 0; isPlaying = true;
+  clearInterval(timer);
+  timer = setInterval(tick, 100);
+  updatePlayerUI();
+}
+
+function tick() {
+  if (!isPlaying) return;
+  const [m, s] = getTrack().dur.split(':').map(Number);
+  const total = (m * 60 + s) * 10;
+  progress = Math.min(100, progress + 100 / total);
+  if (progress >= 100) {
+    progress = 0;
+    if (isRepeat) { updateProgress(); return; }
+    navigate(1);
+    return;
+  }
+  updateProgress();
+}
+
+function togglePlay() {
+  if (!isPlaying && progress === 0 && !getTrack()) return;
+  isPlaying = !isPlaying;
+  if (isPlaying) {
+    clearInterval(timer);
+    timer = setInterval(tick, 100);
+  } else {
+    clearInterval(timer);
+  }
+  updatePlayerUI();
+}
+
+function navigate(dir) {
+  const list = getList();
+  clearInterval(timer);
+  if (isShuffle) {
+    curIdx = Math.floor(Math.random() * list.length);
+  } else {
+    curIdx = (curIdx + dir + list.length) % list.length;
+  }
+  progress = 0; isPlaying = true;
+  timer = setInterval(tick, 100);
+  updatePlayerUI();
+}
+
+function toggleShuffle() {
+  isShuffle = !isShuffle;
+  document.getElementById('btn-shuffle').classList.toggle('active', isShuffle);
+}
+
+function toggleRepeat() {
+  isRepeat = !isRepeat;
+  document.getElementById('btn-repeat').classList.toggle('active', isRepeat);
+}
+
+function toggleFav(idx) {
+  const t = getList()[idx];
+  if (favorites.has(t.id)) favorites.delete(t.id);
+  else favorites.add(t.id);
+  renderTrackList();
+}
+
+// Progress bar click
+document.addEventListener('DOMContentLoaded', () => {
+  const pt = document.getElementById('progress-track');
+  if (pt) pt.addEventListener('click', e => {
+    const r = pt.getBoundingClientRect();
+    progress = Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100));
+    updateProgress();
+  });
+
+  // Volume bar click
+  const vt = document.getElementById('vol-track');
+  if (vt) vt.addEventListener('click', e => {
+    const r = vt.getBoundingClientRect();
+    volume = Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100));
+    document.getElementById('vol-fill').style.width = volume + '%';
+    document.getElementById('vol-icon').className = `fas ${volume === 0 ? 'fa-volume-xmark' : volume < 40 ? 'fa-volume-low' : 'fa-volume-high'} vol-icon`;
+  });
+
+  renderTrackList();
+  updatePlayerUI();
+});
+
+// Spacebar to play/pause
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.key === 'ArrowRight') navigate(1);
+  if (e.key === 'ArrowLeft')  navigate(-1);
+});
+
+async function init() {
+  document.getElementById('header-wrap').innerHTML = renderHeader('amnhac', DATA_DIR);
+  document.getElementById('footer-wrap').innerHTML = renderFooter(DATA_DIR);
+  initDark();
+  try {
+    const truyen = await fetchJSON('data/truyen.json');
+    // No right sidebar for music page - full width feels better
+  } catch(e) {}
+}
+init();
+</script>
+</body>
+</html>
