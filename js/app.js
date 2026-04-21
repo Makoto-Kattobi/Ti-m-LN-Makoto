@@ -5,19 +5,66 @@
 const SITE_NAME = 'LN Kattobi';
 
 const GENRES = [
-  'Japanese Novel','Shounen','Action','Romance',
-  'Science Fiction','Character Growth','Game','School Life'
+  /* Nguồn */
+  'Japanese Novel','Chinese Novel','Korean Novel','Vietnamese Novel','Web Novel',
+  /* Đối tượng */
+  'Shounen','Shoujo','Seinen','Josei',
+  /* Thể loại chính */
+  'Action','Romance','Fantasy','Adventure','Comedy','Drama',
+  'Mystery','Horror','Thriller','Sci-Fi','Slice of Life','Supernatural',
+  /* Phụ loại */
+  'Isekai','School Life','Harem','Reverse Harem','Mecha','Sports',
+  'Historical','Martial Arts','Magic','Psychological','Tragedy',
+  'Character Growth','Game','Music','Cooking',
+  /* Nội dung 18+ */
+  'Mature','Adult','Ecchi',
 ];
 
 const TAG_MAP = {
+  /* Nguồn */
   'Japanese Novel':   'tag-jp',
+  'Chinese Novel':    'tag-cn',
+  'Korean Novel':     'tag-kr',
+  'Vietnamese Novel': 'tag-vn',
+  'Web Novel':        'tag-default',
+  /* Đối tượng */
   'Shounen':          'tag-shounen',
+  'Shoujo':           'tag-romance',
+  'Seinen':           'tag-seinen',
+  'Josei':            'tag-romance',
+  /* Thể loại chính */
   'Action':           'tag-action',
   'Romance':          'tag-romance',
-  'Science Fiction':  'tag-scifi',
+  'Fantasy':          'tag-fantasy',
+  'Adventure':        'tag-action',
+  'Comedy':           'tag-comedy',
+  'Drama':            'tag-drama',
+  'Mystery':          'tag-mystery',
+  'Horror':           'tag-dark',
+  'Thriller':         'tag-dark',
+  'Sci-Fi':           'tag-scifi',
+  'Slice of Life':    'tag-slice',
+  'Supernatural':     'tag-fantasy',
+  /* Phụ loại */
+  'Isekai':           'tag-isekai',
+  'School Life':      'tag-school',
+  'Harem':            'tag-harem',
+  'Reverse Harem':    'tag-harem',
+  'Mecha':            'tag-scifi',
+  'Sports':           'tag-action',
+  'Historical':       'tag-hist',
+  'Martial Arts':     'tag-action',
+  'Magic':            'tag-fantasy',
+  'Psychological':    'tag-mystery',
+  'Tragedy':          'tag-drama',
   'Character Growth': 'tag-slice',
   'Game':             'tag-isekai',
-  'School Life':      'tag-school',
+  'Music':            'tag-romance',
+  'Cooking':          'tag-slice',
+  /* 18+ */
+  'Mature':           'tag-mature',
+  'Adult':            'tag-mature',
+  'Ecchi':            'tag-harem',
 };
 
 function tagClass(t) { return TAG_MAP[t] || 'tag-default'; }
