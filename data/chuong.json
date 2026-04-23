@@ -1,4 +1,16 @@
-<!DOCTYPE html>
+{
+  "i-killed-an-academy-player": {
+    "ten_truyen": "I Killed an Academy Player",
+    "chuong": [
+      {
+        "so": 1,
+        "ten": "Chương 1: Tên chương",
+        "thoi_gian": "vừa xong",
+        "noi_dung": "<p>Nội dung chương 1 ở đây...</p><p>Đoạn tiếp theo...</p>"
+      }
+    ]
+  }
+}<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
