@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "id": "i-killed-an-academy-player",
+    "ten": "I Killed an Academy Player",
+    "ten_goc": "아카데미 플레이어를 죽였다",
+    "bia": "",
+    "bia_text": "殺",
+    "trang_thai": "new",
+    "trang_thai_text": "Đang tiến hành",
+    "the_loai": ["Korean Novel", "Action", "Fantasy", "Harem", "Seinen", "Psychological"],
+    "luot_doc": "0",
+    "danh_gia": "5.0",
+    "so_chuong": 1,
+    "tac_gia": "사람살려",
+    "dich_gia": "Makoto",
+    "mo_ta": "Mô tả truyện ở đây...",
+    "chuong_moi": [
+      {"so": "1", "ten": "Chương 1", "thoi_gian": "vừa xong"}
+    ]
+  }
+][]
